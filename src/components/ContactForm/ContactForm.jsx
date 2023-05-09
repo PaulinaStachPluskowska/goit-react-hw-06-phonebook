@@ -1,18 +1,63 @@
 import PropTypes from 'prop-types';
-import {nanoid} from 'nanoid';
 import css from './ContactForm.module.css';
 import React from 'react';
+import { nanoid } from 'nanoid';
+import { useDispatch, useSelector } from 'react-redux';
+import { addContact } from 'redux/ContactSlice';
+import { getContacts } from 'redux/Selectors';
+import Notiflix from 'notiflix';
 
-const ContactForm = ({handleSubmit}) => {
+export const ContactForm = () => {
 
+  const elementID = nanoid();
+  const dispatch = useDispatch();
+  const contacts = useSelector(getContacts);
+  console.log('contacts', contacts);
 
-    let elementID = nanoid();
+  const handleSubmit = event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const newContact = {
+      name: form.name.value,
+      number: form.number.value,
+    };
+    console.log('newContact', newContact);
+
+    let isRepeating = false;
+    console.log(isRepeating);
+
+    contacts.forEach(contact => { 
+      if (contact.name.toLowerCase() === newContact.name.toLowerCase()) {
+        Notiflix.Notify.warning(`${newContact.name} is already in contacts.`,{
+        position: 'center-top',
+        closeButton: true,
+        timeout: 500,
+        width: '350px',
+      });
+        isRepeating = true;
+        console.log(isRepeating);
+      } else if (contact.number.toLowerCase() === newContact.number.toLowerCase()) {
+        Notiflix.Notify.warning(`${newContact.number} is already in contacts.`,{
+        position: 'center-top',
+        closeButton: true,
+        timeout: 500,
+        width: '350px',
+      });
+        isRepeating = true;
+       }
+    });
+
+    if (!isRepeating) {
+      dispatch(addContact(newContact));
+      form.reset();
+    }
+  };
 
     return (
         <form className={css.form} htmlFor={elementID} onSubmit={handleSubmit}>
             <label className={css.label}>
                 Name
-                <input className={css.input} id={elementID} 
+                <input className={css.input} id={elementID}
                   type="text"
                   name="name"
                   pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
@@ -22,7 +67,7 @@ const ContactForm = ({handleSubmit}) => {
             </label>
             <label className={css.label}>
                 Number
-               <input className={css.input} id={elementID}
+                <input className={css.input}
                   type="tel"
                   name="number"
                   pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
@@ -38,7 +83,8 @@ const ContactForm = ({handleSubmit}) => {
 };
 
 ContactForm.propTypes = {
-    handleSubmit: PropTypes.func,
+  contacts: PropTypes.arrayOf(PropTypes.objectOf(PropTypes.string)),
+  addNewContact: PropTypes.func,
 };
 
 export default ContactForm;
